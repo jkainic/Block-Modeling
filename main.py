@@ -1,7 +1,7 @@
 import wx
-from blockmodel import *
+from blockmodel2 import *
 from numpy import *
-from density import *
+from density2 import *
 
 #used to display the result of running a block modeling algorithm,
 #including the agents in each block, T-value, and matrices displaying the 
@@ -139,7 +139,7 @@ class Frame(wx.Frame):
     def on_random2(self, event):
         first_random = self.model.single_random_block()
         self.model.blocking(first_random)
-        self.model.optimize_by_parts(partial_T, T)
+        self.model.optimize_by_parts(T_diff)
 
         old_T = self.model.T
 
@@ -148,13 +148,12 @@ class Frame(wx.Frame):
         for i in range(100):
             new_blocks = new_model.single_random_block()
             new_model.blocking(new_blocks)
-            new_model.optimize_by_parts(partial_T, T)
+            new_model.optimize_by_parts(T_diff)
             new_T = new_model.T
 
             if new_T > old_T:
                 self.model.blocking(new_blocks)
                 old_T = new_T
-                self.model.T = new_T
 
         text =  "Best of 100 Randomly Generated and Optimized Blockings: \n" 
         for i in range(self.model.num_blocks):
