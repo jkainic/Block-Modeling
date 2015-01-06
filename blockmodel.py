@@ -156,7 +156,7 @@ class block_mat:
 		i = 0
 		blocks = []
 		for i in range(self.num_blocks):
-			new_block = [n for n in range(cut*i, (cut+1)*i)]
+			new_block = [n for n in range(cut*i, cut*(i+1))]
 			blocks.append(new_block)
 
 		final_part = [n for n in range(edge, self.ntwk_size)]
@@ -164,10 +164,10 @@ class block_mat:
 
 		smat = s_ij(blocks)
 
-		dmat = [0]*(self.num_mats)
+		dmat = []
 		for m in range(self.num_mats):
 			m_mat = self.matrix_list[m]
-			dmat[m] = d_sum(m_mat, self.blocks, smat)
+			dmat.append(d_sum(m_mat, blocks, smat))
 
 		T_value = T(self.nu, smat, dmat)
 		optimal_blocks = deepcopy(blocks)
@@ -188,9 +188,9 @@ class block_mat:
 
 			new_smat = s_ij(new_blocks)
 
-			dmat = [0]*(self.num_mats)
+			dmat = []
 			for m_mat in self.matrix_list:
-				dmat[m] = d_sum(m_mat, self.blocks, new_smat)
+				dmat.append(d_sum(m_mat, new_blocks, new_smat))
 
 			new_T = T(self.nu, new_smat, dmat)
 
