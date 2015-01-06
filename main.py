@@ -1,7 +1,7 @@
 import wx
-from blockmodel2 import *
+from blockmodel import *
 from numpy import *
-from density2 import *
+from density import *
 
 #used to display the result of running a block modeling algorithm,
 #including the agents in each block, T-value, and matrices displaying the 
