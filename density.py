@@ -1,7 +1,3 @@
-from numpy import *
-from math import *
-from copy import *
-
 #used to find an appropriate cut off for data that is not already binary
 def find_binary(mat, bottom, top):
 	mx = max(x for row in mat for x in row)
@@ -19,13 +15,17 @@ def find_binary(mat, bottom, top):
 
 #check that a tie matrix is in binary form
 def check_binary(mat):
-	flat_mat = [el for row in mat for el in row]
-	for i in flat_mat:
-		if i != 0 or i != 1:
-			return False
+	n = len(mat)
+	m = len(mat[0])
+
+	for i in range(n):
+		for j in range(m):
+			if mat[i][j] != 0 or mat[i][j] != 1:
+				return False
 	return True
 
 #based on a particular cut-off, return the resulting binary data matrix
+#assumes the matrix is square
 def to_binary(mat, cutoff):
 	N = len(mat)
 	ones_mat = []
@@ -42,7 +42,10 @@ def to_binary(mat, cutoff):
 #find the density of ties in a matrix (assuming agents in and out are the same)
 def density(mat):
 	N = len(mat)
-	ties = sum(mat)
+	ties = 0
+	for row in mat:
+		for x in row:
+			ties += x
 
 	if N == 1:
 		d = 0
@@ -51,52 +54,47 @@ def density(mat):
 
 	return d
 
-#find the density of ties between two different sets of agents
-def non_sq_density(mat):
-	N = len(mat)
-	M = len(mat[0])
-
-	ties = sum(mat)
-
-	d = float(ties)/(N*M)
-
-	return d
-
 #used for developing the matrices that display the density between blocks
-def block_dense(blocks, blocked_matrix):
+def block_dense(blocks, matrix):
+	density_mat = []
 	N = len(blocks)
 
-	density_mat = []
-
-	place1 = 0
-	place2 = 0
-
-	for i in range(N):
+	for b1 in range(N):
 		row = [0]*N
-		n = len(blocks[i])
+		for b2 in range(N):
+			d = 0
 
-		for j in range(N):
-			m = len(blocks[j])
+			if b1 == b2 and len(blocks[b1]) != 1:
+				block = blocks[b1]
+				n = len(block)
+				ties = 0
+				for i in block:
+					for j in block:
+						ties += matrix[i][j]
+				d = float(ties)/ (n*(n-1))
 
-			sub_mat = []
+			elif b1 != b2:
+				block1 = blocks[b1]
+				block2 = blocks[b2]
 
-			for x in range(n):
-				xrow = [0]*m
-				for y in range(m):
-					xrow[y] = blocked_matrix[x + place1][y + place2]
-				sub_mat.append(xrow)
+				n = len(block1)
+				m = len(block2)
 
-			if i == j:
-				d = density(sub_mat)
-			else:
-				d = non_sq_density(sub_mat)
+				ties = 0
 
-			row[j] = d
-			place2 += m
+				for i in block1:
+					for j in block2:
+						ties += matrix[i][j] + matrix[j][i]
+
+				d = float(ties)/(n*m)
+
+			row[b2] = d
+
 		density_mat.append(row)
 
-		place2 = 0
-		place1 += n
-
 	return density_mat
+
+
+
+
 
