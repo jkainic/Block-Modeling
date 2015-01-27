@@ -1,7 +1,8 @@
 import wx
-from blockmodel import *
+from time import time
+from blockmodel2 import *
 from numpy import *
-from density import *
+from density2 import *
 
 #used to display the result of running a block modeling algorithm,
 #including the agents in each block, T-value, and matrices displaying the 
@@ -34,7 +35,7 @@ class Frame(wx.Frame):
         #buttons
         self.concor = wx.Button(button_panel, -1, "CONCOR")
         self.random1 = wx.Button(button_panel, -1, "Best of 100 (before optimizing)")
-        self.random2 = wx.Button(button_panel, -1, "Best of 100 (optimizing each time")
+        self.random2 = wx.Button(button_panel, -1, "Best of 50 (optimizing each time")
         self.optimize = wx.Button(button_panel, -1, "Optimize")
         self.clear = wx.Button(button_panel, -1, "Clear Blocks")
 
@@ -100,7 +101,11 @@ class Frame(wx.Frame):
 
     #find a blocking based on the CONCOR algorithm
     def on_concor(self, event):
+        startTime = time()
         self.model.concor()
+        elapsedTime = time() - startTime
+
+        print "Concor time: " + str(elapsedTime)
 
         text = "Blocks from CONCOR: \n"
         for i in range(self.model.num_blocks):
@@ -108,7 +113,7 @@ class Frame(wx.Frame):
             text += "\n\n Block " + str(i) + ": "
             for p in self.model.blocks[i][0: n - 1]:
                 text += str(p + 1) + ", "
-            text += str(self.model.blocks[i][n - 1])
+            text += str(self.model.blocks[i][n - 1] + 1)
         text +=  "\n\n T-value: "  + str(self.model.T)
         text += self.display_density()
 
@@ -118,7 +123,11 @@ class Frame(wx.Frame):
 
     #find a blocking based from the best 100 randomly generated block models
     def on_random1(self, event):
+        startTime = time()
         self.model.random_blocks()
+        elapsedTime = time() - startTime
+
+        print "Random1 time: " + str(elapsedTime)
 
         text =  "Best of 100 Random Blockings (Non-Optimized): \n" 
         for i in range(self.model.num_blocks):
@@ -126,7 +135,7 @@ class Frame(wx.Frame):
             text +=  "\n\n Block " + str(i) + ": " 
             for p in self.model.blocks[i][0: n - 1]:
                 text += str(p + 1) + ", "
-            text += str(self.model.blocks[i][n - 1])
+            text += str(self.model.blocks[i][n - 1] + 1)
         text +=  "\n\n T-value: "  + str(self.model.T)
         text += self.display_density()
 
@@ -137,31 +146,38 @@ class Frame(wx.Frame):
     #run 100 trials of 1. generating a random block model and 2. optimizing it
     #return the optimal model
     def on_random2(self, event):
+        startTime = time()
         first_random = self.model.single_random_block()
         self.model.blocking(first_random)
-        self.model.optimize_by_parts(T_diff)
+        self.model.optimize()
 
         old_T = self.model.T
 
         new_model = block_mat(self.model.matrix_list, self.model.num_blocks)
 
-        for i in range(100):
+        for i in range(50):
+            print "Step " + str(i)
             new_blocks = new_model.single_random_block()
             new_model.blocking(new_blocks)
-            new_model.optimize_by_parts(T_diff)
+            new_model.optimize()
             new_T = new_model.T
 
             if new_T > old_T:
-                self.model.blocking(new_blocks)
+                self.model.blocking(new_model.blocks)
                 old_T = new_T
+            print "\n"
 
-        text =  "Best of 100 Randomly Generated and Optimized Blockings: \n" 
+        elapsedTime = time() - startTime
+
+        print "Random2 time: " + str(elapsedTime)
+
+        text =  "Best of 50 Randomly Generated and Optimized Blockings: \n" 
         for i in range(self.model.num_blocks):
             n = len(self.model.blocks[i])
             text +=  "\n\n Block " + str(i) + ": " 
             for p in self.model.blocks[i][0: n - 1]:
                 text += str(p + 1) + ", "
-            text += str(self.model.blocks[i][n - 1])
+            text += str(self.model.blocks[i][n - 1] + 1)
         text +=  "\n\n T-value: "  + str(self.model.T)
         text += self.display_density()
 
@@ -171,7 +187,11 @@ class Frame(wx.Frame):
 
     #optimize the current block model associated with the data
     def on_optimize(self, event):
+        startTime = time()
         self.model.optimize()
+        elapsedTime = time() - startTime
+
+        print "Optimization time: " + str(elapsedTime)
 
         text =  "Optimized Blocks: \n" 
         for i in range(self.model.num_blocks):
@@ -179,7 +199,7 @@ class Frame(wx.Frame):
             text +=  "\n\n Block " + str(i) + ": " 
             for p in self.model.blocks[i][0: n - 1]:
                 text += str(p + 1) + ", "
-            text += str(self.model.blocks[i][n - 1])
+            text += str(self.model.blocks[i][n - 1] + 1)
         text +=  "\n\n T-value: "  + str(self.model.T)
         text += self.display_density()
 
@@ -198,10 +218,14 @@ class Frame(wx.Frame):
     #used for displaying the matrices corresponding to the density of ties between blocks
     def display_density(self):
         text = ""
-        block_mats = blocked_mats(self.model.blocks, self.model.matrix_list, self.model.ntwk_size)
         for i in range(self.model.num_mats):
             text +=  "\n\n Density Matrix (" + self.model.matrix_names[i] + "): " 
-            density_mat = block_dense(self.model.blocks, block_mats[i])
+            
+            startTime = time()
+            density_mat = block_dense(self.model.blocks, self.model.matrix_list[i])
+            elapsedTime = time() - startTime
+            print "Block density time: " + str(elapsedTime)
+
             for row in density_mat:
                 text += "\n" + str(row)
 
